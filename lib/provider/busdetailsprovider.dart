@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:busbro_flutter/model/busmodel.dart';
@@ -22,7 +23,7 @@ Future<BusModel> getBusArrivalDetails(String busStopCode) async {
   if (response.statusCode == 200) {
     return BusModel.fromJson(jsonDecode(response.body));
   } else {
-    throw Exception('Failed to load album' + response.body);
+    throw Exception('Failed to load bus details' + response.body);
   }
 }
 
@@ -32,12 +33,8 @@ Future<void> getFavBusDetails() async {
   print("FAVOURITE : " + favorite.toString());
 }
 
-void getNearbyBusStops(double userLat, double userLong) {
-  getProperty("content", userLat, userLong);
-}
-
-Future<List<dynamic>> getProperty(
-    String key, double latitude, double longitude) async {
+Future<List<dynamic>> getNearbyBusStops(
+    double latitude, double longitude) async {
   double sectorHorRange0 = 1.404396;
   double sectorHorRange1 = 1.349823;
   double sectorHorRange2 = 1.320048;
@@ -220,10 +217,25 @@ Future<List<dynamic>> getProperty(
     }
   }
 
+  List<Map> busList = [];
   print(fileName);
   var jsonText = await rootBundle.loadString('assets/' + fileName);
-  print(jsonText);
-  return json.decode(jsonText.replaceFirst("content=", ""));
+  List<dynamic> buses = jsonDecode(jsonText.replaceFirst("content=", ""));
+  buses.forEach((bus) {
+    Map<String, dynamic> busMap = bus;
+    var distance =
+        calculateDistance(latitude, longitude, busMap["la"], busMap["lo"]);
+    busMap.putIfAbsent("di", () => distance);
+
+    if (distance <= 1) {
+      busList.add(jsonDecode(JsonEncoder().convert(busMap)));
+    }
+    busList.sort((a, b) {
+      return a["di"].compareTo(b["di"]);
+    });
+  });
+  log(busList.toString());
+  return busList;
 }
 
 double calculateDistance(lat1, lon1, lat2, lon2) {

@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:busbro_flutter/provider/busbatchprocess.dart';
@@ -13,11 +14,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'SG Bus Bro',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: 'SG Bus Bro'),
     );
   }
 }
@@ -77,7 +78,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void getNearbyStops(double userLat, double userLong) {
-    getNearbyBusStops(userLat, userLong);
+    getNearbyBusStops(userLat, userLong).toString();
   }
 
   @override
@@ -102,10 +103,10 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          //getNearbyStops(_locationData.latitude!, _locationData.longitude!);
+          getNearbyStops(_locationData.latitude!, _locationData.longitude!);
           //getBusArrival("01012");
           //getFavBus();
-          batchBusStops();
+          //batchBusStops();
         },
         tooltip: 'Increment',
         child: Icon(Icons.add),

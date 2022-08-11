@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:http/http.dart' as http;
 import 'package:flutter/services.dart' show rootBundle;
@@ -10,8 +11,6 @@ import 'package:flutter/services.dart' show rootBundle;
 */
 
 Future<void> batchBusStops() async {
-  String url = "http://datamall2.mytransport.sg/ltaodataservice/BusStops";
-
   try {
     Map<String, String> requestHeaders = {
       'User-Agent': '"Mozilla/5.0"',
@@ -19,7 +18,8 @@ Future<void> batchBusStops() async {
       'AccountKey': 'sxeLsqA5TYGPoOXo0P/jDg=='
     };
     String resString = "";
-    for (var counter = 0; counter < 6000; counter = counter + 500) {
+    for (var counter = 0; counter < 20000; counter = counter + 500) {
+      String url = "http://datamall2.mytransport.sg/ltaodataservice/BusStops";
       url = url + "?\$skip=" + counter.toString();
       print(url);
       final response = await http.get(
@@ -39,12 +39,11 @@ Future<void> batchBusStops() async {
         resString = resString.replaceAll("][", ",");
         resString = resString.replaceAll("],[", ",");
         resString = resString.replaceAll("]]", "]");
-        //log("writing done" + resString);
       } else {
         throw Exception('Failed to load album' + response.body);
       }
     }
-
+    log("writing done" + resString);
     String busProperties = "";
     readContent().then((value) {
       busProperties = value.replaceAll("content=", "").toString();
