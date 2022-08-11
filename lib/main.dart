@@ -1,10 +1,9 @@
 import 'dart:io';
 
+import 'package:busbro_flutter/provider/busbatchprocess.dart';
 import 'package:flutter/material.dart';
-import 'package:geolocator/geolocator.dart';
+import 'package:location/location.dart';
 import 'provider/busdetailsprovider.dart';
-import 'package:geolocator_android/geolocator_android.dart';
-import 'package:geolocator_apple/geolocator_apple.dart';
 
 void main() {
   runApp(MyApp());
@@ -33,8 +32,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
-  late Position currentLocation;
-
+  late LocationData _locationData;
   @override
   void initState() {
     super.initState();
@@ -42,9 +40,29 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void getUserLocation() async {
-    Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-    print(position);
+    Location location = new Location();
+
+    bool _serviceEnabled;
+    PermissionStatus _permissionGranted;
+
+    _serviceEnabled = await location.serviceEnabled();
+    if (!_serviceEnabled) {
+      _serviceEnabled = await location.requestService();
+      if (!_serviceEnabled) {
+        return;
+      }
+    }
+
+    _permissionGranted = await location.hasPermission();
+    if (_permissionGranted == PermissionStatus.denied) {
+      _permissionGranted = await location.requestPermission();
+      if (_permissionGranted != PermissionStatus.granted) {
+        return;
+      }
+    }
+
+    _locationData = await location.getLocation();
+    print(_locationData);
   }
 
   void getBusArrival(String busStopCode) {
@@ -56,6 +74,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void getFavBus() {
     print(getFavBusDetails());
+  }
+
+  void getNearbyStops(double userLat, double userLong) {
+    getNearbyBusStops(userLat, userLong);
   }
 
   @override
@@ -80,8 +102,10 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          getBusArrival("01012");
-          getFavBus();
+          //getNearbyStops(_locationData.latitude!, _locationData.longitude!);
+          //getBusArrival("01012");
+          //getFavBus();
+          batchBusStops();
         },
         tooltip: 'Increment',
         child: Icon(Icons.add),
