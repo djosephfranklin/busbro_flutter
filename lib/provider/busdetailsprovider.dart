@@ -8,6 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math' show cos, sqrt, asin;
 import 'package:flutter/services.dart' show rootBundle;
 
+import '../model/busdetail.dart';
+
 Future<BusModel> getBusArrivalDetails(String busStopCode) async {
   Map<String, String> requestHeaders = {
     'User-Agent': '"Mozilla/5.0"',
@@ -27,13 +29,26 @@ Future<BusModel> getBusArrivalDetails(String busStopCode) async {
   }
 }
 
-Future<void> getFavBusDetails() async {
+Future<List<BusDetail>> getFavBusDetails() async {
+  List<BusDetail> busList = [];
   final prefs = await SharedPreferences.getInstance();
   final String? favorite = prefs.getString('favBusStops');
   print("FAVOURITE : " + favorite.toString());
+
+  var jsonText = await rootBundle.loadString('assets/BusProperties.properties');
+  List<dynamic> buses = jsonDecode(jsonText.replaceFirst("content=", ""));
+  buses.forEach((bus) {
+    Map<String, dynamic> busMap = bus;
+    if (favorite.toString().contains(busMap["b"])) {
+      //jsonDecode(JsonEncoder().convert(busMap));
+      busList.add(BusDetail.fromJson(bus));
+    }
+  });
+  log(busList.toString());
+  return busList;
 }
 
-Future<List<dynamic>> getNearbyBusStops(
+Future<List<BusDetail>> getNearbyBusStops(
     double latitude, double longitude) async {
   double sectorHorRange0 = 1.404396;
   double sectorHorRange1 = 1.349823;
@@ -217,7 +232,7 @@ Future<List<dynamic>> getNearbyBusStops(
     }
   }
 
-  List<Map> busList = [];
+  List<BusDetail> busList = [];
   print(fileName);
   var jsonText = await rootBundle.loadString('assets/' + fileName);
   List<dynamic> buses = jsonDecode(jsonText.replaceFirst("content=", ""));
@@ -228,13 +243,14 @@ Future<List<dynamic>> getNearbyBusStops(
     busMap.putIfAbsent("di", () => distance);
 
     if (distance <= 1) {
-      busList.add(jsonDecode(JsonEncoder().convert(busMap)));
+      BusDetail busDetail = BusDetail.fromJson(busMap);
+      busList.add(busDetail);
     }
     busList.sort((a, b) {
-      return a["di"].compareTo(b["di"]);
+      return a.distance.compareTo(b.distance);
     });
   });
-  log(busList.toString());
+  //log(busList.toString());
   return busList;
 }
 
@@ -245,4 +261,29 @@ double calculateDistance(lat1, lon1, lat2, lon2) {
       c((lat2 - lat1) * p) / 2 +
       c(lat1 * p) * c(lat2 * p) * (1 - c((lon2 - lon1) * p)) / 2;
   return 12742 * asin(sqrt(a));
+}
+
+Future<List<BusDetail>> searchBus(String searchString) async {
+  List<BusDetail> searchBusList = [];
+  String busesStr = (await rootBundle.loadString('assets/BusDetailsProp.json'));
+  var buses = json.decode(busesStr)['' + searchString + '_1'];
+  if (buses != null) {
+    buses.forEach((bus) {
+      Map<String, dynamic> busMap = bus;
+      if (bus != null) {
+        searchBusList.add(BusDetail.fromJson(busMap));
+      }
+    });
+  }
+  buses = json.decode(busesStr)['' + searchString + '_2'];
+  if (buses != null) {
+    buses.forEach((bus) {
+      Map<String, dynamic> busMap = bus;
+      if (bus != null) {
+        searchBusList.add(BusDetail.fromJson(busMap));
+      }
+    });
+  }
+
+  return searchBusList;
 }
