@@ -1,28 +1,40 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'tabbed_app.dart';
+import 'package:busbro_flutter/features/bus_details.dart';
 
-void main() async {
+void main() {
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  String theme = "";
-  Future<void> getTheme() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    theme = prefs.getString("theme")!;
-  }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      themeMode: ThemeMode.dark,
-      theme: theme != "dark"
-          ? ThemeData.light(useMaterial3: true)
-          : ThemeData.dark(useMaterial3: true),
-      home: DefaultTabController(
-        length: 4,
-        child: TabbedApp(),
+      title: 'BusBro',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+      ),
+      home: MyHomePage(),
+    );
+  }
+}
+
+class MyHomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('BusBro'),
+      ),
+      body: Center(
+        child: ElevatedButton(
+          child: Text('View Bus Details'),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => BusDetails()),
+            );
+          },
+        ),
       ),
     );
   }
